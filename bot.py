@@ -4,6 +4,8 @@ import re
 import time
 # from disnake.ext import commands
 import datetime
+import pytz
+from tcping import Ping
 
 
 class MyClient(discord.Client):
@@ -15,17 +17,15 @@ class MyClient(discord.Client):
         # 防止机器人自己回自己（
         if message.author == self.user:
             return
-        today = datetime.datetime.now().weekday() + 1
-        now_hour = datetime.datetime.now().hour
+        today = datetime.datetime.now(
+            pytz.timezone('Asia/Shanghai')).strftime("%m%d")
+        # now_hour = datetime.datetime.now().hour
         r18 = "0"
         print(str(message.author) + " 说: " + str(message.content))
         print()
-        zhenxun = 0
+
         setuu = 0
-        if zhenxun == 1 and message.content != "":
-            await message.channel.send("快去看真寻")
-        if message.content != "已经在康了" and today == 5:
-            zhenxun = 1
+
         if message.content[0:4:] == "让我康康":
             r18 = "1"
             setuu = 1
@@ -70,10 +70,12 @@ class MyClient(discord.Client):
             await message.channel.send("我又来了，嘿嘿嘿")
 
         if message.content == "我要bing图":
-            bing_img = requests.get("https://api.muvip.cn//api/bing/index.php?rand=false&day=0&size=1920x1080&info=true").json()
-            bing_title = str(bing_img["title"])
-            bing_url = bing_img["url"]
-            bing_link = bing_img["link"]
+            bing_img = requests.get(
+                "https://bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN"
+            ).json()
+            bing_title = str(bing_img["images"][0]["copyright"])
+            bing_url = "https://bing.com" + bing_img["images"][0]["url"]
+            bing_link = bing_img["images"][0]["copyrightlink"]
             embed = discord.Embed(title=bing_title, url=bing_link)
             embed.set_image(url=bing_url)
             await message.channel.send(embed=embed)
@@ -85,10 +87,34 @@ class MyClient(discord.Client):
             hitokoto_who = hitokoto_all["from_who"]
             embed = discord.Embed(title=hitokoto)
             if hitokoto_who:
-                kongkong = "ㅤ"*len(hitokoto) + "——" + hitokoto_who + hitokoto_from
+                kongkong = "ㅤ" * len(
+                    hitokoto) + "——" + hitokoto_who + hitokoto_from
             else:
-                kongkong = "ㅤ"*len(hitokoto) + "——" + hitokoto_from
+                kongkong = "ㅤ" * len(hitokoto) + "——" + hitokoto_from
             embed.set_footer(text=kongkong)
+            await message.channel.send(embed=embed)
+
+        if message.content[0:6:] == "ping一下":
+            if ":" in message.content:
+                ping_port = message.content[message.content.rfind(":") + 1::]
+                ping_url = message.content[6:message.content.rfind(":"):]
+                ping = Ping(ping_url, ping_port)
+            else:
+                ping_url = message.content[6::]
+                ping = Ping(ping_url)
+            ping.ping(5)
+            ret = ping.result.table
+            await message.channel.send(ret)
+
+        if message.content == "历史上的今天":
+            lstoday = requests.get("https://today.yxlr.tk").json()
+            embed = discord.Embed(title="历史上的今天", url="https://baike.baidu.com/calendar")
+            for num in range(len(lstoday[today])):
+                ls_title = lstoday[today][num]["title"]
+                if "<a" in ls_title:
+                    ls_title = re.sub("</a>", "", re.sub('<a[^>]+">', "", ls_title))
+                ls_year = lstoday[today][num]["year"]
+                embed.add_field(name=ls_year, value=ls_title, inline=False)
             await message.channel.send(embed=embed)
 
 
