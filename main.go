@@ -20,7 +20,7 @@ var (
 	commandHandlers = setu.CommandHandler
 )
 func init() {
-	token := "MTA2ODEwODMzMzU1MjI0MjgwMA.GvuAGW.SrlAAHj_3BlEO46CVyISouFk_cXgRT0iKUWz-Y"
+	token := "YOUR TOKEN"
 
 	// creates a new Discord session
 	dg, err = discordgo.New("Bot " + token)
